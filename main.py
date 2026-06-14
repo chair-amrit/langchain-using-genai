@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from PyPDF2 import PdfReader
-import os
 
 load_dotenv()
 
@@ -22,20 +21,36 @@ try:
         model="gemini-2.5-flash",
     )
 
-    prompt=ChatPromptTemplate.from_template(
+    prompt1=ChatPromptTemplate.from_template(
         """
-        Summarize the following PDF in 10 concise bullet points:
+        Summarize the following PDF in 3 concise bullet points:
         {data}
         """
     )
 
-    chain = prompt | llm
+    prompt2=ChatPromptTemplate.from_template(
+        """
+        Translate the following text into hindi:
+        {data}
+        """
+    )
 
-    response=chain.invoke(
+    chain1 = prompt1 | llm
+
+    chain2 = prompt2 | llm
+
+    response1=chain1.invoke(
         {"data":text}
     )
 
-    print(response.content)
+    response2=chain2.invoke(
+        {"data":response1.content}
+    )
+
+    print("========== Summary ==========")
+    print(response1.content)
+    print("========== Translation in Hindi ==========")
+    print(response2.content)
 
 except FileNotFoundError:
     print("PDF file not found.")

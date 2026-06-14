@@ -1,21 +1,22 @@
-# LangChain PDF Summarizer
+# LangChain PDF Processor
 
-A simple AI-powered PDF summarizer built using PyPDF2, LangChain, and Gemini.
+A document processing application built using PyPDF2, LangChain, and Gemini.
 
 ## Features
 
 * Reads a PDF file from a user-provided path
 * Extracts text from all pages
-* Uses a LangChain PromptTemplate
-* Sends the extracted text to Gemini 2.5 Flash
-* Generates a concise summary in 10 bullet points
+* Uses LangChain PromptTemplates
+* Generates a 3-point summary of the document
+* Translates the summary into Hindi
+* Displays both English and Hindi outputs
 
-## Technologies
+## Technologies Used
 
 * Python
 * PyPDF2
 * LangChain
-* Gemini API
+* Gemini 2.5 Flash
 * python-dotenv
 
 ## Workflow
@@ -25,13 +26,13 @@ PDF
 ↓
 Text Extraction
 ↓
-PromptTemplate
+Chain 1: Summarization
 ↓
-LangChain Chain
+English Summary
 ↓
-Gemini LLM
+Chain 2: Hindi Translation
 ↓
-Summary
+Hindi Summary
 ```
 
 ## Installation
@@ -43,7 +44,7 @@ pip install langchain-google-genai
 pip install python-dotenv
 ```
 
-## Environment Variable
+## Environment Variables
 
 Create a `.env` file:
 
@@ -57,13 +58,25 @@ GOOGLE_API_KEY=your_api_key
 python main.py
 ```
 
+Enter the path of the PDF file when prompted.
+
+## LangChain Concepts Demonstrated
+
+* PromptTemplate
+* LLM Integration
+* Chain Creation
+* Multi-step Chaining
+* Output of One Chain as Input to Another
+* Document Processing Pipeline
+
 ## Learning Outcomes
 
 * PDF text extraction
 * Prompt engineering
-* LangChain chains
-* LLM integration
-* End-to-end document processing
+* LangChain fundamentals
+* Sequential AI workflows
+* Gemini API integration
+* Multi-stage text transformation
 
 ```
 ```
