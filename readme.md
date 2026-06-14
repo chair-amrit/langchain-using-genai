@@ -1,22 +1,23 @@
-# LangChain PDF Processor
+# LangChain PDF Processing
 
-A document processing application built using PyPDF2, LangChain, and Gemini.
+A beginner-friendly project demonstrating document processing using LangChain and Gemini.
 
 ## Features
 
-* Reads a PDF file from a user-provided path
-* Extracts text from all pages
-* Uses LangChain PromptTemplates
-* Generates a 3-point summary of the document
-* Translates the summary into Hindi
-* Displays both English and Hindi outputs
+* Load PDF files using `PyPDFLoader`
+* Extract document content and metadata
+* Split documents into chunks using `RecursiveCharacterTextSplitter`
+* Generate PDF summaries using Gemini
+* Translate summaries to Hindi
+* Display chunk count and sample chunks
 
-## Technologies Used
+## Tech Stack
 
 * Python
-* PyPDF2
 * LangChain
 * Gemini 2.5 Flash
+* PyPDFLoader
+* PyPDF2
 * python-dotenv
 
 ## Workflow
@@ -24,27 +25,35 @@ A document processing application built using PyPDF2, LangChain, and Gemini.
 ```text
 PDF
 ↓
-Text Extraction
+Document Loader
 ↓
-Chain 1: Summarization
+Document Objects
 ↓
-English Summary
+Text Splitter
 ↓
-Chain 2: Hindi Translation
+Chunks
 ↓
-Hindi Summary
+Prompt Template
+↓
+Gemini
+↓
+Summary
+↓
+Hindi Translation
 ```
 
 ## Installation
 
 ```bash
-pip install pypdf2
 pip install langchain
+pip install langchain-community
 pip install langchain-google-genai
+pip install pypdf
+pip install PyPDF2
 pip install python-dotenv
 ```
 
-## Environment Variables
+## Environment Variable
 
 Create a `.env` file:
 
@@ -58,25 +67,18 @@ GOOGLE_API_KEY=your_api_key
 python main.py
 ```
 
-Enter the path of the PDF file when prompted.
+## Concepts Learned
 
-## LangChain Concepts Demonstrated
-
-* PromptTemplate
-* LLM Integration
-* Chain Creation
-* Multi-step Chaining
-* Output of One Chain as Input to Another
-* Document Processing Pipeline
-
-## Learning Outcomes
-
-* PDF text extraction
-* Prompt engineering
-* LangChain fundamentals
-* Sequential AI workflows
-* Gemini API integration
-* Multi-stage text transformation
+* Document Loaders
+* Document Objects
+* Metadata
+* Text Chunking
+* Chunk Overlap
+* Prompt Templates
+* LangChain Chains
+* Multi-Step Chains
+* Gemini Integration
+* Basic Document Processing Pipeline
 
 ```
 ```
