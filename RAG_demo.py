@@ -11,6 +11,8 @@ path=input("Enter the path of the PDF file:").strip().strip('"')
 loader = PyPDFLoader(path)
 docs=loader.load()
 
+query=input("Ask a question: ")
+
 splitter = RecursiveCharacterTextSplitter(
     chunk_size=300,
     chunk_overlap=50
@@ -29,13 +31,12 @@ vectors=FAISS.from_documents(
     embeds
 )
 
-query=input("Ask a question: ")
-
-results=vectors.similarity_search(
-    query,
-    k=2
+retriever=vectors.as_retriever(
+    search_kwargs={"k":2}
 )
 
-for i, doc in enumerate(results):
-    print(f"Match{i+1}")
+docs=retriever.invoke(query)
+
+for i, doc in enumerate(docs):
+    print(f"===========Retrieved Chunk {i+1}:============")
     print(doc.page_content)
