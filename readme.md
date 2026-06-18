@@ -1,49 +1,80 @@
-# Document Q&A Agent
+# Document Q&A Agent API
 
-A simple Retrieval-Augmented Generation (RAG) project built while learning LangChain.
+A Retrieval-Augmented Generation (RAG) application built while learning LangChain, vector databases, and AI application deployment with FastAPI.
 
-The application allows users to ask questions about any PDF document. Instead of sending the entire document to the LLM, the PDF is split into chunks, embedded into vectors, stored in a FAISS vector database, and the most relevant chunks are retrieved before generating an answer.
+The project allows users to ask questions about a PDF document through a REST API. The system retrieves relevant document chunks using semantic search and uses Gemini to generate answers grounded in the document content.
 
-## What I Built
+## Features
 
-* Loaded PDF documents using `PyPDFLoader`
-* Split documents into chunks using `RecursiveCharacterTextSplitter`
-* Generated embeddings using Gemini Embeddings
-* Stored embeddings in a FAISS vector store
-* Retrieved relevant chunks based on user queries
-* Used Gemini to answer questions from retrieved context
-* Displayed the source chunks used to generate answers
+* Load and process PDF documents
+* Split documents into chunks
+* Generate embeddings using Gemini Embeddings
+* Store vectors in FAISS
+* Retrieve relevant document chunks
+* Generate context-aware answers using Gemini
+* FastAPI endpoint for document question answering
+* Auto-generated API documentation with Swagger UI
 
-## Workflow
+## Architecture
 
 ```text
 PDF
 ↓
-Document Loader
+PyPDFLoader
 ↓
-Chunks
+Document Chunks
 ↓
-Embeddings
+Gemini Embeddings
 ↓
 FAISS Vector Store
 ↓
 Retriever
 ↓
-Relevant Chunks
+Relevant Context
 ↓
-Gemini
+Gemini 2.5 Flash
 ↓
 Answer
+↓
+FastAPI Endpoint
+↓
+JSON Response
 ```
 
-## Technologies Used
+## Tech Stack
 
 * Python
 * LangChain
 * Google Gemini API
 * FAISS
+* FastAPI
+* Uvicorn
 * PyPDFLoader
 * python-dotenv
+
+## API Endpoint
+
+### Ask a Question
+
+```http
+POST /ask
+```
+
+Example:
+
+```json
+{
+    "question": "What is LoRA?"
+}
+```
+
+Response:
+
+```json
+{
+    "answer": "LoRA is a parameter-efficient fine-tuning technique..."
+}
+```
 
 ## Installation
 
@@ -52,9 +83,13 @@ pip install langchain
 pip install langchain-community
 pip install langchain-google-genai
 pip install faiss-cpu
+pip install fastapi
+pip install uvicorn
 pip install pypdf
 pip install python-dotenv
 ```
+
+## Environment Variables
 
 Create a `.env` file:
 
@@ -62,25 +97,38 @@ Create a `.env` file:
 GOOGLE_API_KEY=your_api_key
 ```
 
-## Run
+## Run the API
 
 ```bash
-python RAG_demo.py
+uvicorn main:app --reload
 ```
+
+Open:
+
+```text
+http://localhost:8000/docs
+```
+
+to test the API using the Swagger UI.
 
 ## What I Learned
 
-* Document loading and processing
-* Text chunking and chunk overlap
-* Embeddings and vector representations
-* Vector databases (FAISS)
-* Similarity search and retrieval
+* LangChain fundamentals
+* Prompt templates and chains
+* Document loaders
+* Text chunking and overlap
+* Embeddings
+* Vector databases
+* FAISS similarity search
+* Retrievers
 * Retrieval-Augmented Generation (RAG)
-* Prompting LLMs using retrieved context
+* FastAPI deployment
+* Building AI applications as APIs
 
-## Limitations
+## Future Improvements
 
-* Works with a single PDF at a time
-* Retrieval quality depends on chunk size and embeddings
-* Can only answer questions based on the uploaded document
-* Does not maintain conversation memory
+* Support multiple PDFs
+* Chat memory and conversation history
+* Persistent vector storage
+* Upload PDFs through the API
+* Advanced RAG techniques and reranking
