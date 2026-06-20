@@ -7,10 +7,12 @@ class state(TypedDict):
 
 #It does nothing just to see how data flow.
 def node1(state):
+    print("node 1:",state)
     return state
 
 #This modifies the state.
 def node2(state):
+    print("node 2 :",state)
     return {
         "text":state["text"].upper()
     }
