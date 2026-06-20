@@ -132,3 +132,46 @@ to test the API using the Swagger UI.
 * Persistent vector storage
 * Upload PDFs through the API
 * Advanced RAG techniques and reranking
+
+## LangGraph Fundamentals
+
+As the next step in my AI engineering learning path, I started learning LangGraph to understand how agent workflows differ from traditional LangChain chains.
+
+### Concepts Learned
+
+* State: Shared data that flows through the graph
+* Nodes: Functions that read and modify state
+* Edges: Connections that determine execution flow
+* START and END nodes
+* Graph compilation and execution
+* State propagation between nodes
+
+### First LangGraph Project
+
+Built a simple 2-node graph:
+
+```text
+START
+↓
+Node 1
+↓
+Node 2
+↓
+END
+```
+
+Workflow:
+
+```text
+Input: hello world
+↓
+Node 1
+↓
+Node 2 (convert text to uppercase)
+↓
+Output: HELLO WORLD
+```
+
+### Key Takeaway
+
+Unlike LangChain chains that execute in a fixed linear sequence, LangGraph introduces graph-based workflows where state can move between nodes, enabling conditional routing, loops, retries, and agent-like behavior.
