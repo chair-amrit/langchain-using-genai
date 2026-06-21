@@ -3,8 +3,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import ChatPromptTemplate
+from llm_utils import google_chain
 
 load_dotenv()
 
@@ -49,32 +48,8 @@ def ask_question(query,retriever):
         doc.page_content for doc in retrieved_docs
     )
 
-    #create llm
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash"
-    )
-
-    #provide prompt
-    prompt=ChatPromptTemplate.from_template(
-    """
-        Answer the question using only the provided context:
-
-        If the answer is not present in the context, reply:
-        "I could not find this information in the document."
-
-        Do not use outside knowledge.   
-
-        Context=
-        {context}
-    
-        Question=
-        {question}
-    
-        """
-    )
-
     #create the chain(prompt->llm)
-    chain = prompt | llm
+    chain = google_chain()
 
     #generate answer and get the response
     response=chain.invoke({
