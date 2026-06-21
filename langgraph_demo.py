@@ -4,50 +4,57 @@ from langgraph.graph import StateGraph, START, END
 #LangGraph needs to know what data exists in the state.
 class State(TypedDict):
     question:str
-    answer:str
-    steps_taken:list
 
+#check length
+def check_length(state):
+    return state
 
-#Add question
-def node1(State):
-    return {
-        "steps_taken":State["steps_taken"]+["question_received"]
-    }
-
-#add answer update steps taken
-def node2(State):
-    return {
-        "answer":f"Answer for {State['question']}",
-        "steps_taken":State["steps_taken"]+["answer_generated"]
-    }
+#short node
+def short_node(state):
+    print("Short Question")
+    return state
 
 #complete update steps taken
-def node3(State):
-    return {
-        "steps_taken" : State["steps_taken"]+["completed"]
-    }
+def long_node(state):
+    print("Long Question")
+    return state
 
+#condotional node function
+def route(state):
+    if len(state['question'])<5:
+        return "short"
+    else:
+        return "long"
+    
 #create graqh
 graph = StateGraph(State)
 
 #addnodes
-graph.add_node("node1",node1)
-graph.add_node("node2",node2)
-graph.add_node("node3",node3)
+graph.add_node("check_length",check_length)
+graph.add_node("short_node",short_node)
+graph.add_node("long_node",long_node)
 
-#connect nodes
-graph.add_edge(START,"node1")
-graph.add_edge("node1","node2")
-graph.add_edge("node2","node3")
-graph.add_edge("node3",END)
+#connect nodes by edges
+graph.add_edge(START,"check_length")
+
+#conditional edge
+graph.add_conditional_edges(
+    "check_length",
+    route,
+    {
+        "short":"short_node",
+        "long":"long_node"
+    }
+)
+
+graph.add_edge("short_node",END)
+graph.add_edge("long_node",END)
 
 #Convert flowchart into executable program
 app=graph.compile()
 
 #use .stream
 for event in app.stream({
-    "question":"What is LoRA?",
-    "answer":"",
-    "steps_taken":[]
+    "question":"Hi"
 }):
     print(event)
