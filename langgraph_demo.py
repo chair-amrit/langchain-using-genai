@@ -1,60 +1,41 @@
 from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
+from rag_utils import create_rag
+
+pdf_path=r"D:\finetune.pdf"
+
+retriever=create_rag(pdf_path)
 
 #LangGraph needs to know what data exists in the state.
 class State(TypedDict):
-    question:str
+    question: str
+    context: str
+    answer: str
 
-#check length
-def check_length(state):
-    return state
-
-#short node
-def short_node(state):
-    print("Short Question")
-    return state
-
-#complete update steps taken
-def long_node(state):
-    print("Long Question")
-    return state
-
-#condotional node function
-def route(state):
-    if len(state['question'])<5:
-        return "short"
-    else:
-        return "long"
-    
-#create graqh
-graph = StateGraph(State)
-
-#addnodes
-graph.add_node("check_length",check_length)
-graph.add_node("short_node",short_node)
-graph.add_node("long_node",long_node)
-
-#connect nodes by edges
-graph.add_edge(START,"check_length")
-
-#conditional edge
-graph.add_conditional_edges(
-    "check_length",
-    route,
-    {
-        "short":"short_node",
-        "long":"long_node"
+def retriever_node(state):
+    docs=retriever.invoke(
+        state["question"]
+    )
+    context="/n/n".join(
+        doc.page_content
+        for doc in docs
+    )
+    return {
+        "context": context
     }
-)
 
-graph.add_edge("short_node",END)
-graph.add_edge("long_node",END)
+graph= StateGraph(State)
 
-#Convert flowchart into executable program
-app=graph.compile()
+graph.add_node("node1",retriever_node)
 
-#use .stream
+graph.add_edge(START,"node1")
+graph.add_edge("node1",END)
+
+app = graph.compile()
+
 for event in app.stream({
-    "question":"Hi"
+    "question":"What is LoRA?",
+    "context":"",
+    "answer":""
 }):
     print(event)
