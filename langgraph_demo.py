@@ -1,7 +1,7 @@
 from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from rag_utils import create_rag
-from llm_utils import google_chain
+from llm_utils import google_chain , tav_search
 
 pdf_path=r"D:\finetune.pdf"
 
@@ -12,6 +12,7 @@ class State(TypedDict):
     question: str
     context: str
     answer: str
+    web_context: str
 
 def retriever_node(state):
     docs=retriever.invoke(
@@ -39,6 +40,15 @@ def check_node(state):
     if state["answer"]:
         print("Answer generated succesfully")
     return state
+
+def web_node(state):
+    web_context=tav_search(
+        state['question']
+    )
+    return {
+        "web_context":web_context
+    }
+
 
 graph= StateGraph(State)
 
