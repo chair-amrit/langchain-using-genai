@@ -11,6 +11,10 @@ def google_chain():
     prompt= ChatPromptTemplate.from_template(
         """
         Answer the question using only provided context.
+        If the answer is not present in the context, return exactly:
+        NOT_FOUND
+        Do not use outside knowledge.
+
         
         Context:
         {context}
@@ -18,6 +22,25 @@ def google_chain():
         Question:
         {question}
 
+        """
+    )
+    return prompt | llm
+
+
+def web_chain():
+    llm=ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash"
+    )
+    prompt= ChatPromptTemplate.from_template(
+        """
+        Answer the question using the web search results.
+        
+
+        Web Search Results:
+        {context}
+
+        Question:
+        {question}
         """
     )
     return prompt | llm

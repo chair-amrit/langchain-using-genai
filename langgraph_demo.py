@@ -1,7 +1,7 @@
 from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from rag_utils import create_rag
-from llm_utils import google_chain , tav_search
+from llm_utils import google_chain , tav_search , web_chain
 
 pdf_path=r"D:\finetune.pdf"
 
@@ -37,11 +37,16 @@ def generate_node(state):
     }
 
 def check_node(state):
-    if state["answer"]:
-        print("Answer generated succesfully")
     return state
 
-def web_node(state):
+def route(state):
+    if state["answer"]=="NOT_FOUND":
+        print("Question is out of context....\nAnswer from web results:")
+        return "web"
+    return "done"
+
+
+def web_search_node(state):
     web_context=tav_search(
         state['question']
     )
@@ -49,23 +54,61 @@ def web_node(state):
         "web_context":web_context
     }
 
+def web_generate_node(state):
+    chain=web_chain()
+
+    response=chain.invoke({
+        "context":state["web_context"],
+        "question":state["question"]
+    })
+    return{
+        "answer":response.content
+    }
+
+
 
 graph= StateGraph(State)
 
 graph.add_node("node1",retriever_node)
 graph.add_node("node2",generate_node)
 graph.add_node("node3",check_node)
+graph.add_node("node4",web_search_node)
+graph.add_node("node5",web_generate_node)
+
+
+graph.add_conditional_edges(
+    "node3",
+    route,
+    {
+        "web":"node4",
+        "done":END
+    }
+)
 
 graph.add_edge(START,"node1")
 graph.add_edge("node1","node2")
 graph.add_edge("node2","node3")
-graph.add_edge("node3",END)
+graph.add_edge("node4","node5")
+graph.add_edge("node5",END)
 
 app = graph.compile()
 
+result=app.invoke({
+    "question":"who won ipl2024?",
+    "context":"",
+    "answer":"",
+    "web_context":""
+})
+
+print(result["answer"])
+
+
+#for debuging and understanding purpose
+""""
 for event in app.stream({
-    "question":"What is LoRA?",
+    "question":"Who won IPL 2020?",
     "context":"",
     "answer":""
 }):
     print(event)
+"""
