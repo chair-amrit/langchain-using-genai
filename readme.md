@@ -1,53 +1,78 @@
-## LangGraph Learning Progress
+# Hybrid RAG Agent with LangGraph
 
-This project was extended to learn LangGraph and understand how agent workflows differ from traditional LangChain chains.
+A document question-answering agent built using LangChain, LangGraph, FAISS, Gemini, and Tavily Search.
 
-### What I Learned
+The agent first searches an uploaded PDF for relevant information. If the answer is not found in the document, it automatically performs a web search and generates an answer using online sources.
 
-* State management using `TypedDict`
-* Creating and connecting graph nodes
-* Using `START` and `END` nodes
-* Executing graphs with `.invoke()` and `.stream()`
-* Passing and updating state between nodes
-* Conditional routing with `add_conditional_edges()`
-* Building decision-based workflows instead of fixed chains
+## Features
 
-### LangGraph Experiments
+* PDF document loading with PyPDFLoader
+* Document chunking using RecursiveCharacterTextSplitter
+* Vector embeddings using Gemini Embeddings
+* FAISS vector database for retrieval
+* Retrieval-Augmented Generation (RAG)
+* LangGraph workflow orchestration
+* Conditional routing based on answer availability
+* Tavily web search fallback
+* Gemini-powered answer generation
+* Final answer returned through a single agent workflow
 
-#### Basic Graph
+## Workflow
 
-Built a simple 2-node graph that receives text and converts it to uppercase.
-
-#### State Tracking
-
-Created a state containing:
-
-* question
-* answer
-* steps_taken
-
-Passed the state through multiple nodes and observed updates using `.stream()`.
-
-#### Conditional Routing
-
-Implemented a routing function that directs execution to different nodes based on question length using conditional edges.
-
-#### RAG Workflow as a Graph
-
-Converted the document Q&A pipeline into a LangGraph workflow:
-
-```text
-retrieve_node
+Question
 ↓
-generate_node
+Retrieve Relevant Chunks
 ↓
-check_node
-```
+Generate Answer from Document
+↓
+Answer Found?
 
-* `retrieve_node` retrieves relevant document chunks
-* `generate_node` generates an answer using Gemini
-* `check_node` validates workflow completion
+YES → Return Answer
 
-### Key Takeaway
+NO → Search Web (Tavily)
+↓
+Generate Answer from Web Results
+↓
+Return Answer
 
-LangChain chains execute in a fixed sequence, while LangGraph allows stateful workflows, conditional routing, and agent-style execution with decision making and future support for loops and retries.
+## LangGraph Nodes
+
+* `retriever_node` – Retrieves relevant document chunks
+* `generate_node` – Generates answer from document context
+* `check_node` – Validates whether an answer was found
+* `web_search_node` – Searches the web using Tavily
+* `web_generate_node` – Generates answer using web search results
+
+## Technologies Used
+
+* Python
+* LangChain
+* LangGraph
+* Google Gemini
+* FAISS
+* Tavily Search
+* FastAPI
+* dotenv
+
+## What I Learned
+
+* RAG pipeline architecture
+* Document retrieval using vector databases
+* LangGraph state management
+* Nodes and edges in graph workflows
+* Conditional routing
+* Agent decision-making
+* Tool integration
+* Hybrid RAG + Web Search systems
+* Building fallback mechanisms for missing information
+* Organizing AI projects into reusable modules
+
+## Future Improvements
+
+* Citation support
+* Source attribution
+* Multi-tool agents
+* Memory integration
+* ToolNode implementation
+* Multi-document retrieval
+* Agent loops and self-correction
