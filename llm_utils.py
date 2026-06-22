@@ -1,5 +1,8 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def google_chain():
     llm=ChatGoogleGenerativeAI(
@@ -18,3 +21,24 @@ def google_chain():
         """
     )
     return prompt | llm
+
+
+
+from tavily import TavilyClient
+import os
+
+client = TavilyClient(
+    api_key=os.getenv("TAVILY_API_KEY")
+)
+
+def tav_search(query):
+    response = client.search(
+        query=query
+    )
+    results=response["results"]
+
+    context="\n\n".join(
+        f"{result['title']}\n{result['content'][:400]}"
+        for result in results[:5]
+    )
+    return context
