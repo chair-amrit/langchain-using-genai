@@ -1,9 +1,11 @@
 from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
+from typing import Annotated
+from operator import add
 
 class State(TypedDict):
-    message:list[str]
+    message:Annotated[list[str],add]
 
 def chat_node(state):
     print("Current memory:")
