@@ -10,17 +10,17 @@ def google_chain():
     )
     prompt= ChatPromptTemplate.from_template(
         """
-        Answer the question using only provided context.
-        If the answer is not present in the context, return exactly:
-        NOT_FOUND
-        Do not use outside knowledge.
+        Conversation History:
+        {messages}
 
-        
-        Context:
+        Document Context:
         {context}
-        
-        Question:
+
+        Current Question:
         {question}
+
+        Use the conversation history only to resolve references such as "it", "they", "those", etc.
+        Answer using the document context or anything given in history. If the answer is not present, return NOT_FOUND.
 
         """
     )

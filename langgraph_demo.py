@@ -3,7 +3,9 @@ from langgraph.graph import StateGraph, START, END
 from rag_utils import create_rag
 from llm_utils import google_chain , tav_search , web_chain
 from typing import Annotated
-from operator import add
+from langgraph.graph.message import add_messages
+from langchain_core.messages import HumanMessage, AIMessage
+from langgraph.checkpoint.memory import MemorySaver
 
 pdf_path=r"D:\finetune.pdf"
 
@@ -15,7 +17,7 @@ class State(TypedDict):
     context: str
     answer: str
     web_context: str
-    history:Annotated[list[dict],add]
+    messages:Annotated[list,add_messages]
 
 def retriever_node(state):
     docs=retriever.invoke(
@@ -32,6 +34,7 @@ def retriever_node(state):
 def generate_node(state):
     chain=google_chain()
     response=chain.invoke({
+        "messages":state["messages"],
         "context": state["context"],
         "question": state["question"]
     })
@@ -69,14 +72,21 @@ def web_generate_node(state):
     }
 
 def save_node(state):
+    print(state["messages"])
     return {
-        "history":[
-            {
-                "question":state["question"],
-                "answer":state["answer"]
-            }
+        "messages":[
+            HumanMessage(content=state["question"]),
+            AIMessage(content=state["answer"])
         ]
     }
+
+memory=MemorySaver()
+
+config = {
+    "configurable":{
+        "thread_id":"chat1"
+    }
+}
 
 graph= StateGraph(State)
 
@@ -104,7 +114,9 @@ graph.add_edge("node4","node5")
 graph.add_edge("node5","save")
 graph.add_edge("save",END)
 
-app = graph.compile()
+app = graph.compile(
+    checkpointer=memory
+)
 
 while True:
     question=input("User:")
@@ -116,8 +128,10 @@ while True:
         "question":question,
         "context":"",
         "answer":"",
-        "web_context":""
-    })
+        "web_context":"",
+        "messages":[]
+    },config=config
+    )
     print("\nAgent:",result["answer"])
     print()
 
