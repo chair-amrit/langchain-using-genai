@@ -2,6 +2,8 @@ from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from rag_utils import create_rag
 from llm_utils import google_chain , tav_search , web_chain
+from typing import Annotated
+from operator import add
 
 pdf_path=r"D:\finetune.pdf"
 
@@ -13,6 +15,7 @@ class State(TypedDict):
     context: str
     answer: str
     web_context: str
+    history:Annotated[list[dict],add]
 
 def retriever_node(state):
     docs=retriever.invoke(
@@ -65,7 +68,15 @@ def web_generate_node(state):
         "answer":response.content
     }
 
-
+def save_node(state):
+    return {
+        "history":[
+            {
+                "question":state["question"],
+                "answer":state["answer"]
+            }
+        ]
+    }
 
 graph= StateGraph(State)
 
@@ -74,6 +85,7 @@ graph.add_node("node2",generate_node)
 graph.add_node("node3",check_node)
 graph.add_node("node4",web_search_node)
 graph.add_node("node5",web_generate_node)
+graph.add_node("save",save_node)
 
 
 graph.add_conditional_edges(
@@ -81,7 +93,7 @@ graph.add_conditional_edges(
     route,
     {
         "web":"node4",
-        "done":END
+        "done":"save"
     }
 )
 
@@ -89,7 +101,8 @@ graph.add_edge(START,"node1")
 graph.add_edge("node1","node2")
 graph.add_edge("node2","node3")
 graph.add_edge("node4","node5")
-graph.add_edge("node5",END)
+graph.add_edge("node5","save")
+graph.add_edge("save",END)
 
 app = graph.compile()
 
