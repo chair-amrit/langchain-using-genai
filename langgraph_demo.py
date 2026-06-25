@@ -93,15 +93,20 @@ graph.add_edge("node5",END)
 
 app = graph.compile()
 
-result=app.invoke({
-    "question":"who won ipl2024?",
-    "context":"",
-    "answer":"",
-    "web_context":""
-})
+while True:
+    question=input("User:")
+    
+    if question.lower()=="exit":
+        break
 
-print(result["answer"])
-
+    result=app.invoke({
+        "question":question,
+        "context":"",
+        "answer":"",
+        "web_context":""
+    })
+    print("\nAgent:",result["answer"])
+    print()
 
 #for debuging and understanding purpose
 """"
