@@ -65,3 +65,32 @@ def tav_search(query):
         for result in results[:5]
     )
     return context
+
+
+
+
+from langchain_groq import ChatGroq
+
+def router_chain(query):
+    llm=ChatGroq(
+        model="llama-3.1-8b-instant",
+        temperature=0
+    )
+    prompt=ChatPromptTemplate.from_template(
+        """
+        Classify the user input into exactly one category:
+
+        chat: greetings, casual conversation, questions about the assistant, small talk.
+        doc: information-seeking questions, technical questions, or questions that may require document or web knowledge.
+        nonsense: gibberish or meaningless input.
+
+        Return ONLY one word:
+        chat
+        doc
+        nonsense
+
+        Input:
+        {query}
+"""
+    )
+    return prompt | llm
