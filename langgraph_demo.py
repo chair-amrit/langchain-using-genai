@@ -1,7 +1,7 @@
 from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from rag_utils import create_rag
-from llm_utils import google_chain , tav_search , web_chain
+from llm_utils import google_chain , tav_search , web_chain , router_chain
 from typing import Annotated
 from langgraph.graph.message import add_messages
 from langchain_core.messages import HumanMessage, AIMessage
@@ -17,7 +17,35 @@ class State(TypedDict):
     context: str
     answer: str
     web_context: str
-    messages:Annotated[list,add_messages]
+    messages: Annotated[list,add_messages]
+    route: str
+
+#check query and determine if chat/valid question/invalid query and update route in state
+def router_node(state):
+    chain=router_chain()
+    response=chain.invoke({
+        "query":state["question"]
+    })
+    return {
+        "route": response.content.strip().lower().replace(".", "")
+    }
+
+#fuction to return route from state
+def route1(state):
+    return state["route"]
+
+#if invalid query
+def invalid_node(state):
+    return{
+        "answer":"I couldn't understand that input."
+    }
+
+#if normal chatting
+def chat_node(state):
+    return{
+        "answer":"I can answer questions about the document or chat with you."
+    }
+
 
 def retriever_node(state):
     docs=retriever.invoke(
@@ -45,7 +73,7 @@ def generate_node(state):
 def check_node(state):
     return state
 
-def route(state):
+def route2(state):
     if state["answer"]=="NOT_FOUND":
         print("Question is out of context....\nAnswer from web results:")
         return "web"
@@ -90,6 +118,9 @@ config = {
 
 graph= StateGraph(State)
 
+graph.add_node("check_query",router_node)
+graph.add_node("invalid_node",invalid_node)
+graph.add_node("chat_node",chat_node)
 graph.add_node("node1",retriever_node)
 graph.add_node("node2",generate_node)
 graph.add_node("node3",check_node)
@@ -97,22 +128,34 @@ graph.add_node("node4",web_search_node)
 graph.add_node("node5",web_generate_node)
 graph.add_node("save",save_node)
 
-
+#check query and redirect to appropriate node
+graph.add_conditional_edges(
+    "check_query",
+    route1,
+    {
+        "chat":"chat_node",
+        "nonsense":"invalid_node",
+        "doc":"node1"
+    }
+)
 graph.add_conditional_edges(
     "node3",
-    route,
+    route2,
     {
         "web":"node4",
         "done":"save"
     }
 )
 
-graph.add_edge(START,"node1")
+graph.add_edge(START,"check_query")
 graph.add_edge("node1","node2")
 graph.add_edge("node2","node3")
 graph.add_edge("node4","node5")
 graph.add_edge("node5","save")
 graph.add_edge("save",END)
+graph.add_edge("invalid_node",END)
+graph.add_edge("chat_node",END)
+
 
 app = graph.compile(
     checkpointer=memory
@@ -129,7 +172,8 @@ while True:
         "context":"",
         "answer":"",
         "web_context":"",
-        "messages":[]
+        "messages":[],
+        "route":""
     },config=config
     )
     print("\nAgent:",result["answer"])

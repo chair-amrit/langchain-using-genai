@@ -71,7 +71,7 @@ def tav_search(query):
 
 from langchain_groq import ChatGroq
 
-def router_chain(query):
+def router_chain():
     llm=ChatGroq(
         model="llama-3.1-8b-instant",
         temperature=0
