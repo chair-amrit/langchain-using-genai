@@ -1,7 +1,7 @@
 from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from rag_utils import create_rag
-from llm_utils import google_chain , tav_search , web_chain , router_chain
+from llm_utils import google_chain , tav_search , web_chain , router_chain , rewrite_chain
 from typing import Annotated
 from langgraph.graph.message import add_messages
 from langchain_core.messages import HumanMessage, AIMessage
@@ -14,6 +14,7 @@ retriever=create_rag(pdf_path)
 #LangGraph needs to know what data exists in the state.
 class State(TypedDict):
     question: str
+    standalone_question: str
     context: str
     answer: str
     web_context: str
@@ -34,27 +35,38 @@ def router_node(state):
 def route1(state):
     return state["route"]
 
-#if invalid query
+#if invalid query....
 def invalid_node(state):
     return{
         "answer":"I couldn't understand that input."
     }
 
-#if normal chatting
+#if normal chatting......
 def chat_node(state):
     return{
         "answer":"I can answer questions about the document or chat with you."
     }
 
+#if question..... we need a rewriter so we could retrieve for follow up questions
+def rewrite_node(state):
+    chain = rewrite_chain()
+    response = chain.invoke({
+        "messages":state["messages"],
+        "question":state["question"]
+    })
+    return {
+        "standalone_question":response.content.strip()
+    }
 
 def retriever_node(state):
     docs=retriever.invoke(
-        state["question"]
+        state["standalone_question"]
     )
     context="\n\n".join(
         doc.page_content
         for doc in docs
     )
+    print("Rewritten:",state["standalone_question"])
     return {
         "context": context
     }
@@ -121,6 +133,7 @@ graph= StateGraph(State)
 graph.add_node("check_query",router_node)
 graph.add_node("invalid_node",invalid_node)
 graph.add_node("chat_node",chat_node)
+graph.add_node("rewrite",rewrite_node)
 graph.add_node("node1",retriever_node)
 graph.add_node("node2",generate_node)
 graph.add_node("node3",check_node)
@@ -135,7 +148,7 @@ graph.add_conditional_edges(
     {
         "chat":"chat_node",
         "nonsense":"invalid_node",
-        "doc":"node1"
+        "doc":"rewrite"
     }
 )
 graph.add_conditional_edges(
@@ -148,6 +161,7 @@ graph.add_conditional_edges(
 )
 
 graph.add_edge(START,"check_query")
+graph.add_edge("rewrite","node1")
 graph.add_edge("node1","node2")
 graph.add_edge("node2","node3")
 graph.add_edge("node4","node5")
@@ -174,13 +188,13 @@ while True:
         "web_context":"",
         "messages":[],
         "route":""
-    },config=config
+        },config=config
     )
     print("\nAgent:",result["answer"])
     print()
 
 #for debuging and understanding purpose
-""""
+"""
 for event in app.stream({
     "question":"Who won IPL 2020?",
     "context":"",

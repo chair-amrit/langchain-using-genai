@@ -94,3 +94,29 @@ def router_chain():
 """
     )
     return prompt | llm
+
+def rewrite_chain():
+    llm=ChatGroq(
+        model="llama-3.1-8b-instant",
+        temperature=0
+    )
+    prompt=ChatPromptTemplate.from_template(
+        """
+        Rewrite the question into a standalone question using the conversation history.
+
+        Rules:
+        - Keep the original meaning exactly.- Do not answer the question.
+        - Do not add or remove information.
+        - Only replace references like "it", "they", or "this".
+        - If already standalone, return it unchanged.
+
+        Conversation:
+        {messages}
+
+        Question:
+        {question}
+
+        Return only the rewritten question.
+        """
+    )
+    return prompt | llm
