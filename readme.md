@@ -1,78 +1,84 @@
-# Hybrid RAG Agent with LangGraph
+# Conversational Adaptive RAG Agent
 
-A document question-answering agent built using LangChain, LangGraph, FAISS, Gemini, and Tavily Search.
-
-The agent first searches an uploaded PDF for relevant information. If the answer is not found in the document, it automatically performs a web search and generates an answer using online sources.
+A conversational Retrieval-Augmented Generation (RAG) system built with LangGraph. The agent intelligently routes user requests, rewrites follow-up questions, retrieves relevant document context, optionally searches the web with user permission, and maintains conversation memory.
 
 ## Features
 
-* PDF document loading with PyPDFLoader
-* Document chunking using RecursiveCharacterTextSplitter
-* Vector embeddings using Gemini Embeddings
-* FAISS vector database for retrieval
-* Retrieval-Augmented Generation (RAG)
-* LangGraph workflow orchestration
-* Conditional routing based on answer availability
-* Tavily web search fallback
-* Gemini-powered answer generation
-* Final answer returned through a single agent workflow
+- Intent Router
+  - Classifies input into:
+    - Chat
+    - Document Question
+    - Invalid Input
+
+- Conversational Memory
+  - Stores previous user and assistant messages using LangGraph MemorySaver.
+
+- Question Rewriting
+  - Converts follow-up questions into standalone questions before retrieval.
+
+- PDF RAG
+  - Retrieves relevant chunks using FAISS embeddings.
+
+- Web Search Fallback
+  - If the document cannot answer the query, the user is asked whether to search the web.
+  - Uses Tavily search.
+
+- Modular LangGraph Workflow
+  - Each task is implemented as an independent node.
 
 ## Workflow
 
-Question
+User Query
 ↓
-Retrieve Relevant Chunks
-↓
-Generate Answer from Document
-↓
+Router
+├── Chat
+├── Invalid
+└── Document Question
+        ↓
+Question Rewriter
+        ↓
+Retriever
+        ↓
+Gemini Answer Generation
+        ↓
 Answer Found?
+├── Yes → Save Memory → Response
+└── No
+      ↓
+Ask User Permission
+      ↓
+Yes → Web Search → Generate Answer → Save Memory
+No  → End
 
-YES → Return Answer
+## Tech Stack
 
-NO → Search Web (Tavily)
-↓
-Generate Answer from Web Results
-↓
-Return Answer
+- LangGraph
+- LangChain
+- Google Gemini
+- Groq (Llama 3.1 8B Instant)
+- FAISS
+- HuggingFace Embeddings
+- Tavily Search API
+- Python
 
-## LangGraph Nodes
+## Models
 
-* `retriever_node` – Retrieves relevant document chunks
-* `generate_node` – Generates answer from document context
-* `check_node` – Validates whether an answer was found
-* `web_search_node` – Searches the web using Tavily
-* `web_generate_node` – Generates answer using web search results
+| Task | Model |
+|------|-------|
+| Router | Llama 3.1 8B Instant (Groq) |
+| Question Rewriter | Llama 3.1 8B Instant (Groq) |
+| Final Answer | Gemini |
 
-## Technologies Used
+## Current Limitations
 
-* Python
-* LangChain
-* LangGraph
-* Google Gemini
-* FAISS
-* Tavily Search
-* FastAPI
-* dotenv
+- FAISS is in-memory (not persistent).
+- Retrieval quality is determined by the LLM instead of a dedicated grader.
+- Chat mode is currently a placeholder.
 
-## What I Learned
+## Planned Improvements
 
-* RAG pipeline architecture
-* Document retrieval using vector databases
-* LangGraph state management
-* Nodes and edges in graph workflows
-* Conditional routing
-* Agent decision-making
-* Tool integration
-* Hybrid RAG + Web Search systems
-* Building fallback mechanisms for missing information
-* Organizing AI projects into reusable modules
-
-## Future Improvements
-
-* Citation support
-* Source attribution
-* Multi-tool agents
-* Memory integration
-* ToolNode implementation
-* Multi-document retrieval
-* Agent loops and self-correction
+- Chroma Vector Database
+- Retrieval Grader
+- Real Chat Agent
+- Source Citations
+- Multi-Agent Architecture
