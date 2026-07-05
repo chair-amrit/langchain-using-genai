@@ -20,6 +20,7 @@ class State(TypedDict):
     web_context: str
     messages: Annotated[list,add_messages]
     route: str
+    web_permission: str
 
 #check query and determine if chat/valid question/invalid query and update route in state
 def router_node(state):
@@ -91,6 +92,21 @@ def route2(state):
         return "web"
     return "done"
 
+def permission_node(state):
+    while True:
+        choice=input(
+            "\nI couldn't find this in the document.\n"
+            "Search the web? (yes/no): "
+            ).strip().lower()
+        if choice in ["yes","y"]:
+            return {
+                "web_permission":"yes"
+            }
+        if choice in ["no","n"]:
+            return {
+                "web_permission":"no"
+            }
+        print("Please enter 'yes' or ' no'.")
 
 def web_search_node(state):
     web_context=tav_search(
@@ -134,11 +150,11 @@ graph.add_node("check_query",router_node)
 graph.add_node("invalid_node",invalid_node)
 graph.add_node("chat_node",chat_node)
 graph.add_node("rewrite",rewrite_node)
-graph.add_node("node1",retriever_node)
-graph.add_node("node2",generate_node)
-graph.add_node("node3",check_node)
-graph.add_node("node4",web_search_node)
-graph.add_node("node5",web_generate_node)
+graph.add_node("retrieve",retriever_node)
+graph.add_node("generate",generate_node)
+graph.add_node("check",check_node)
+graph.add_node("web_search",web_search_node)
+graph.add_node("web_generate",web_generate_node)
 graph.add_node("save",save_node)
 
 #check query and redirect to appropriate node
@@ -152,20 +168,20 @@ graph.add_conditional_edges(
     }
 )
 graph.add_conditional_edges(
-    "node3",
+    "check",
     route2,
     {
-        "web":"node4",
+        "web":"web_search",
         "done":"save"
     }
 )
 
 graph.add_edge(START,"check_query")
-graph.add_edge("rewrite","node1")
-graph.add_edge("node1","node2")
-graph.add_edge("node2","node3")
-graph.add_edge("node4","node5")
-graph.add_edge("node5","save")
+graph.add_edge("rewrite","retrieve")
+graph.add_edge("retrieve","generate")
+graph.add_edge("generate","check")
+graph.add_edge("web_search","web_generate")
+graph.add_edge("web_generate","save")
 graph.add_edge("save",END)
 graph.add_edge("invalid_node",END)
 graph.add_edge("chat_node",END)
@@ -188,6 +204,7 @@ while True:
         "web_context":"",
         "messages":[],
         "route":""
+        "web_permission":""
         },config=config
     )
     print("\nAgent:",result["answer"])
