@@ -3,7 +3,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from dotenv import load_dotenv
-from llm_utils import google_chain
+from llm_utils import generate_chain
 
 load_dotenv()
 
@@ -49,7 +49,7 @@ def ask_question(query,retriever):
     )
 
     #create the chain(prompt->llm)
-    chain = google_chain()
+    chain = generate_chain()
 
     #generate answer and get the response
     response=chain.invoke({

@@ -4,24 +4,32 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def google_chain():
+def generate_chain():
     llm=ChatGoogleGenerativeAI(
         model="gemini-2.5-flash"
     )
     prompt= ChatPromptTemplate.from_template(
         """
-        Conversation History:
+        You are a helpful AI assistant.
+
+        Use the retrieved context to answer the user's question accurately.
+
+        Rules:
+        - Answer only from the provided context.
+        - If the context is insufficient, do not guess.
+        - Be clear and concise.
+        - Use the conversation history only for conversational continuity, not as factual evidence.
+
+        Conversation:
         {messages}
 
-        Document Context:
+        Context:
         {context}
 
-        Current Question:
+        Question:
         {question}
 
-        Use the conversation history only to resolve references such as "it", "they", "those", etc.
-        Answer using the document context or anything given in history. If the answer is not present, return NOT_FOUND.
-
+        Answer:
         """
     )
     return prompt | llm
@@ -102,21 +110,45 @@ def rewrite_chain():
     )
     prompt=ChatPromptTemplate.from_template(
         """
-        Rewrite the question into a standalone question using the conversation history.
+        You rewrite follow-up questions into standalone questions.
 
         Rules:
-        - Keep the original meaning exactly.- Do not answer the question.
-        - Do not add or remove information.
-        - Only replace references like "it", "they", or "this".
-        - If already standalone, return it unchanged.
+        - If the question is already standalone, return it unchanged.
+        - Resolve pronouns like "it", "they", "that" using the conversation history.
+        - If the user introduces a new topic or entity, do NOT replace it with an older one.
+        - Return only the rewritten question.
 
         Conversation:
         {messages}
 
         Question:
         {question}
+        """
+    )
+    return prompt | llm
 
-        Return only the rewritten question.
+def retrieval_grader():
+    llm=ChatGroq(
+        model="llama-3.1-8b-instant",
+        temperature=0
+    )
+    prompt=ChatPromptTemplate.from_template(
+        """
+        You are a retrieval grader.
+
+        Determine whether the retrieved context contains enough information to answer the user's question.
+
+        Return ONLY one word:
+
+        relevant 
+        or
+        irrelevant
+
+        Question:
+        {question}
+
+        Context:
+        {context}
         """
     )
     return prompt | llm

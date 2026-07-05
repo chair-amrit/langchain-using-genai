@@ -1,7 +1,7 @@
 from typing import TypedDict
 from langgraph.graph import StateGraph, START, END
 from rag_utils import create_rag
-from llm_utils import google_chain , tav_search , web_chain , router_chain , rewrite_chain
+from llm_utils import generate_chain , tav_search , web_chain , router_chain , rewrite_chain , retrieval_grader
 from typing import Annotated
 from langgraph.graph.message import add_messages
 from langchain_core.messages import HumanMessage, AIMessage
@@ -21,6 +21,7 @@ class State(TypedDict):
     messages: Annotated[list,add_messages]
     route: str
     web_permission: str
+    retrieval_status: str
 
 #check query and determine if chat/valid question/invalid query and update route in state
 def router_node(state):
@@ -72,8 +73,24 @@ def retriever_node(state):
         "context": context
     }
 
+
+def grader_node(state):
+    chain = retrieval_grader()
+    response = chain.invoke({
+        "question":state["standalone_question"],
+        "context":state["context"]
+    })
+    return {
+        "retrieval_status":response.content.strip().lower()
+    }
+
+
+def route_retrieval_node(state):
+    return state["retrieval_status"]
+
+
 def generate_node(state):
-    chain=google_chain()
+    chain=generate_chain()
     response=chain.invoke({
         "messages":state["messages"],
         "context": state["context"],
@@ -82,14 +99,6 @@ def generate_node(state):
     return {
         "answer":response.content
     }
-
-def check_answer(state):
-    return state
-
-def route_web(state):
-    if state["answer"]=="NOT_FOUND":
-        return "web"
-    return "done"
 
 
 def permission_node(state):
@@ -113,10 +122,9 @@ def route_web_permission(state):
     return state["web_permission"]
 
 
-
 def web_search_node(state):
     web_context=tav_search(
-        state['question']
+        state['standalone_question']
     )
     return {
         "web_context":web_context
@@ -157,8 +165,8 @@ graph.add_node("invalid_node",invalid_node)
 graph.add_node("chat_node",chat_node)
 graph.add_node("rewrite",rewrite_node)
 graph.add_node("retrieve",retriever_node)
+graph.add_node("grader",grader_node)
 graph.add_node("generate",generate_node)
-graph.add_node("check",check_answer)
 graph.add_node("permission",permission_node)
 graph.add_node("web_search",web_search_node)
 graph.add_node("web_generate",web_generate_node)
@@ -175,11 +183,11 @@ graph.add_conditional_edges(
     }
 )
 graph.add_conditional_edges(
-    "check",
-    route_web,
+    "grader",
+    route_retrieval_node,
     {
-        "web":"permission",
-        "done":"save"
+        "relevant":"generate",
+        "irrelevant":"permission"
     }
 )
 
@@ -193,14 +201,14 @@ graph.add_conditional_edges(
 )
 
 graph.add_edge(START,"check_query")
+graph.add_edge("chat_node",END)
+graph.add_edge("invalid_node",END)
 graph.add_edge("rewrite","retrieve")
-graph.add_edge("retrieve","generate")
-graph.add_edge("generate","check")
+graph.add_edge("retrieve","grader")
+graph.add_edge("generate","save")
 graph.add_edge("web_search","web_generate")
 graph.add_edge("web_generate","save")
 graph.add_edge("save",END)
-graph.add_edge("invalid_node",END)
-graph.add_edge("chat_node",END)
 
 
 app = graph.compile(
@@ -220,7 +228,8 @@ while True:
         "web_context":"",
         "messages":[],
         "route":"",
-        "web_permission":""
+        "web_permission":"",
+        "retrieval_status":""
         },config=config
     )
     print("\nAgent:",result["answer"])
