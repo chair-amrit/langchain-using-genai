@@ -33,7 +33,7 @@ def router_node(state):
     }
 
 #fuction to return route from state
-def route1(state):
+def route_query(state):
     return state["route"]
 
 #if invalid query....
@@ -83,14 +83,14 @@ def generate_node(state):
         "answer":response.content
     }
 
-def check_node(state):
+def check_answer(state):
     return state
 
-def route2(state):
+def route_web(state):
     if state["answer"]=="NOT_FOUND":
-        print("Question is out of context....\nAnswer from web results:")
         return "web"
     return "done"
+
 
 def permission_node(state):
     while True:
@@ -107,6 +107,12 @@ def permission_node(state):
                 "web_permission":"no"
             }
         print("Please enter 'yes' or ' no'.")
+
+
+def route_web_permission(state):
+    return state["web_permission"]
+
+
 
 def web_search_node(state):
     web_context=tav_search(
@@ -152,7 +158,8 @@ graph.add_node("chat_node",chat_node)
 graph.add_node("rewrite",rewrite_node)
 graph.add_node("retrieve",retriever_node)
 graph.add_node("generate",generate_node)
-graph.add_node("check",check_node)
+graph.add_node("check",check_answer)
+graph.add_node("permission",permission_node)
 graph.add_node("web_search",web_search_node)
 graph.add_node("web_generate",web_generate_node)
 graph.add_node("save",save_node)
@@ -160,7 +167,7 @@ graph.add_node("save",save_node)
 #check query and redirect to appropriate node
 graph.add_conditional_edges(
     "check_query",
-    route1,
+    route_query,
     {
         "chat":"chat_node",
         "nonsense":"invalid_node",
@@ -169,10 +176,19 @@ graph.add_conditional_edges(
 )
 graph.add_conditional_edges(
     "check",
-    route2,
+    route_web,
     {
-        "web":"web_search",
+        "web":"permission",
         "done":"save"
+    }
+)
+
+graph.add_conditional_edges(
+    "permission",
+    route_web_permission,
+    {
+        "yes":"web_search",
+        "no":END
     }
 )
 
@@ -203,7 +219,7 @@ while True:
         "answer":"",
         "web_context":"",
         "messages":[],
-        "route":""
+        "route":"",
         "web_permission":""
         },config=config
     )
