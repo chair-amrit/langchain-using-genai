@@ -134,21 +134,27 @@ def retrieval_grader():
     )
     prompt=ChatPromptTemplate.from_template(
         """
-        You are a retrieval grader.
+        You are a retrieval relevance classifier.
 
-        Determine whether the retrieved context contains enough information to answer the user's question.
+        Your task is to determine whether the retrieved context contains information that is useful for answering the user's question.
 
-        Return ONLY one word:
-
-        relevant 
-        or
-        irrelevant
+        Rules:
+        - Return "relevant" if the context contains all OR part of the information needed to answer the question.
+        - Return "relevant" even if the answer is incomplete, brief, or requires inference from the retrieved context.
+        - Return "irrelevant" ONLY if the context is completely unrelated to the user's question.
+        - Do NOT judge the quality or completeness of the answer.
+        - Do NOT explain your reasoning.
 
         Question:
         {question}
 
-        Context:
+        Retrieved Context:
         {context}
+
+        Output ONLY one word:
+        relevant
+        or
+        irrelevant
         """
     )
     return prompt | llm
