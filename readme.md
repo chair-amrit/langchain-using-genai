@@ -28,27 +28,57 @@ A conversational Retrieval-Augmented Generation (RAG) system built with LangGrap
 
 ## Workflow
 
+```text
 User Query
-↓
+    │
+    ▼
 Router
-├── Chat
-├── Invalid
+├── Chat ─────────────────────────► Chat Response
+├── Invalid ──────────────────────► Invalid Request Response
 └── Document Question
-        ↓
+        │
+        ▼
 Question Rewriter
-        ↓
+        │
+        ▼
 Retriever
-        ↓
+        │
+        ▼
 Gemini Answer Generation
-        ↓
+        │
+        ▼
 Answer Found?
-├── Yes → Save Memory → Response
+├── Yes
+│     │
+│     ▼
+│  Save Memory
+│     │
+│     ▼
+│  Response
+│
 └── No
-      ↓
+      │
+      ▼
 Ask User Permission
-      ↓
-Yes → Web Search → Generate Answer → Save Memory
-No  → End
+├── Yes
+│     │
+│     ▼
+│  Web Search
+│     │
+│     ▼
+│  Generate Answer
+│     │
+│     ▼
+│  Save Memory
+│     │
+│     ▼
+│  Response
+│
+└── No
+      │
+      ▼
+     End
+```
 
 ## Tech Stack
 
